@@ -26,10 +26,12 @@ What breaks it:
 
 - Set `supported_inference_dtypes` to what the forward can actually run in. Common:
   fp32 weights + bf16/fp16 autocast on the heavy forward.
-- Keep numerically sensitive ops (norms, codebook lookup, occupancy queries,
-  conditioning setup) in **fp32**, the rest in the autocast dtype. Cube3D restricts
-  the VAE to `working_dtypes = [torch.float32]` because the VQ lookup and occupancy
-  query are unstable otherwise.
+- Don't blindly inherit upstream's (original research code's) dtype choices — they're
+  often heavy-handed (fp32 everywhere). Default to ComfyUI's lighter conventions and
+  only pin a heavier dtype for a specific op when the lighter one **noticeably degrades
+  or changes the output**, verified with your parity harness. Cube3D restricts the VAE
+  to `working_dtypes = [torch.float32]` because the VQ lookup and occupancy query are
+  genuinely unstable in bf16 — a justified pin, documented as a deviation, not a reflex.
 - Norm layers can upcast internally (`x.float()` → compute → `.type_as(x)`) without
   hurting offload.
 - Match upstream's autocast **boundaries**, not just the dtype — running conditioning

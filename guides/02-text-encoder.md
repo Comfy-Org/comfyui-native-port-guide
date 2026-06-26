@@ -78,11 +78,15 @@ the conditioning directly off the guider instead (see
 
 These are the conditioning bugs that actually bit real ports:
 
-- **Wrong dtype / autocast region.** Upstream may compute conditioning in fp32
-  *outside* the model's bf16 autocast. If you compute it inside bf16 you get a
-  subtly different (and less correct) result. Cube3D's `sample_cube` does
-  `encode_text` + `bbox_proj` in fp32 outside the bf16 autocast to match upstream
-  `Engine.prepare_inputs`; an earlier version that didn't produced a different mesh.
+- **Wrong autocast region.** What matters is *where* the autocast region begins/ends
+  relative to the forward, not slavishly copying upstream's dtype. Upstream (the
+  original research code) may compute conditioning in fp32 *outside* the model's bf16
+  autocast; that's often heavy-handed, so default to ComfyUI's lighter conventions and
+  only pin a heavier dtype when bf16/fp16 **noticeably degrades or changes the
+  output** — verify with your parity harness, then pin it and document the deviation.
+  Cube3D's `sample_cube` does `encode_text` + `bbox_proj` in fp32 outside the bf16
+  autocast because bf16 there produced a different mesh — a justified pin, not a
+  reflex. See [guides/05](05-sampler.md) and [guides/07](07-optimizations.md).
 - **Padding & attention masks.** ComfyUI's SD1 CLIP path pads and masks differently
   from HuggingFace. Real prompt tokens match to ~1e-3, but **padding positions can
   diverge by >1.0**. If your model conditions on *all* positions (including padding)

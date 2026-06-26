@@ -77,8 +77,17 @@ model, drive the schedule with `BasicScheduler(steps=1)`.
 - **CFG schedule variants.** Upstream may have multiple engines (e.g. a CUDA-graph
   `EngineFast` that fixes γ at step 0, vs a plain `Engine` that decays from step 0).
   Pick the one that matches the reference output and note which.
-- **Autocast region.** Keep conditioning/setup in the dtype upstream uses (often
-  fp32) and only the heavy forward in bf16 — see [guides/02](02-text-encoder.md).
+- **Autocast region & dtype — match upstream's *boundaries*, not necessarily its
+  dtype.** Upstream here means the original research code, which is often heavy-handed
+  (e.g. forcing fp32 in places ComfyUI would happily run in bf16/fp16). Don't blindly
+  copy that — default to ComfyUI's lighter dtype conventions and let model management
+  pick. **Only** pin a heavier dtype (e.g. keep conditioning/setup in fp32) where
+  doing otherwise **noticeably degrades or meaningfully changes the output** — verify
+  with your parity harness, then pin it *and document why* (it's a deviation). What you
+  must reproduce faithfully is *where* the autocast region begins/ends relative to the
+  forward, not the exact dtype upstream happened to use. See
+  [guides/02](02-text-encoder.md). (Cube3D does pin conditioning to fp32 — but only
+  because bf16 there produced a different mesh.)
 - **Determinism.** Greedy argmax is deterministic but can flip on near-ties across
   torch/CUDA builds; this shows up as a different-but-valid result. Document it.
 
