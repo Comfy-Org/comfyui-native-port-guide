@@ -23,6 +23,11 @@ relevant guide.
       forward, with a comment. [→03](../guides/03-vae.md)
 - [ ] Load-time weight transforms use `model.clone()` + `add_object_patch`.
       [→06](../guides/06-nodes.md)
+- [ ] **RoPE reuses the shared Flux rope** (`comfy.ldm.flux.math` `rope`/`apply_rope`)
+      rather than a bespoke complex-number implementation. The Flux path dispatches to
+      comfy-kitchen's optimized `apply_rope` kernel (`comfy.quant_ops.ck.apply_rope`),
+      so a custom RoPE silently leaves that optimization on the table. If you must
+      deviate, prove parity and say why. [→07](../guides/07-optimizations.md)
 
 ## Latent & VAE
 

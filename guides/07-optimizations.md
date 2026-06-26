@@ -57,6 +57,30 @@ either OOMs or needless offloading (slow).
 - For autoregressive models, implement a **KV cache** so each step is O(1) in context
   rather than re-attending the whole sequence (the Cube3D GPT port does this).
 
+### Reuse the shared Flux RoPE
+
+If your model uses rotary position embeddings, **reuse `comfy.ldm.flux.math`'s `rope`
+/ `apply_rope`** rather than writing a bespoke RoPE. Most ComfyUI models already use
+it, and at inference `apply_rope` dispatches to **comfy-kitchen's optimized kernel**
+(`comfy.quant_ops.ck.apply_rope`) — a hand-rolled implementation gets none of that.
+
+```python
+# comfy/ldm/flux/math.py
+def apply_rope(xq, xk, freqs_cis):
+    if comfy.model_management.in_training:
+        return _apply_rope(xq, xk, freqs_cis)
+    else:
+        return comfy.quant_ops.ck.apply_rope(xq, xk, freqs_cis)  # comfy-kitchen kernel
+```
+
+The shared `rope(pos, dim, theta)` builds `freqs_cis` as a real-valued rotation
+(`[cos, -sin, sin, cos]`), which is what the optimized kernel expects. A common
+anti-pattern (seen in the Cube3D GPT port) is to faithfully copy upstream's
+**complex-number** RoPE (`torch.polar` + `view_as_complex`); it's correct but bypasses
+the kernel. Prefer adapting to the Flux representation, and if you switch, **verify
+parity** — the pairing convention (adjacent dims) and `theta` must match upstream so
+token outputs don't drift.
+
 ## 5. Dependencies — don't add one just for your model
 
 A new pip dependency for a single model is a maintenance and install-size cost for
