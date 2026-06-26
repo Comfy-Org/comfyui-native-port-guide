@@ -12,8 +12,6 @@ worked examples are welcome.
   on current `master`, fix it and note the date/commit you verified against.
 - **New patterns.** If a port reveals a convention this guide doesn't cover, add it to
   the relevant guide and to [reference/conventions.md](reference/conventions.md).
-- **Investigations.** Open questions (like the 3D node consolidation) belong in
-  `investigations/` as analysis docs, clearly marked as proposals, not decisions.
 
 ## Style
 

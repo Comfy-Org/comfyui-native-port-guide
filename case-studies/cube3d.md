@@ -107,5 +107,3 @@ When fed identical conditioning under the same torch build, output is **bit-iden
 
 - Close the CLIP padding/mask parity gap.
 - (Optional) a `MeshDecimate` node to match upstream's default post-processing.
-- Consolidation of the per-model 3D VAE decode nodes — see
-  [investigations/3d-vae-node-consolidation.md](../investigations/3d-vae-node-consolidation.md).

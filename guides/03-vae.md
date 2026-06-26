@@ -110,7 +110,6 @@ not needed for text-to-3D). That's fine:
 | 3d splat | `VAEDecodeTripoSplat` → SPLAT |
 
 3D currently uses **dedicated** decode nodes because their output socket types and
-options differ. Whether they can be consolidated is an open question — see
-[investigations/3d-vae-node-consolidation.md](../investigations/3d-vae-node-consolidation.md).
+options differ.
 
 Next: [guides/04-latent-format.md](04-latent-format.md).

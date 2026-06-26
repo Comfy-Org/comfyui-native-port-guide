@@ -100,8 +100,6 @@ only overwrite the rows you mean to.
 ## Output types & 3D
 
 3D output types (`VOXEL`, `MESH`, `SPLAT`) are distinct sockets, which is why each 3D
-model has its own decode node today. See
-[investigations/3d-vae-node-consolidation.md](../investigations/3d-vae-node-consolidation.md)
-for whether that can be unified.
+model has its own decode node today.
 
 Next: [guides/07-optimizations.md](07-optimizations.md).

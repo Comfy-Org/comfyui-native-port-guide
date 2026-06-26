@@ -83,7 +83,6 @@ What is the output modality?
 | [reference/ops-and-model-management.md](reference/ops-and-model-management.md) | `comfy.ops`, ModelPatcher, offload internals |
 | [checklists/pre-pr-checklist.md](checklists/pre-pr-checklist.md) | Parity validation + review checklist |
 | [case-studies/cube3d.md](case-studies/cube3d.md) | The Roblox Cube3D port, annotated end-to-end |
-| [investigations/3d-vae-node-consolidation.md](investigations/3d-vae-node-consolidation.md) | Can the per-model 3D VAE decode nodes be unified? |
 
 ## License
 
