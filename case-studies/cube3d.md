@@ -37,7 +37,7 @@ Only four new nodes; everything else is reused.
 
 | File | Change |
 |------|--------|
-| `comfy/ldm/cube/gpt.py` | `DualStreamRoformer` port (dual-stream RoPE attention, per-head RMSNorm, SwiGLU, KV cache; `rope_theta=10000`). Uses `comfy.ops`. |
+| `comfy/ldm/cube/gpt.py` | `DualStreamRoformer` port (dual-stream RoPE attention, per-head RMSNorm, SwiGLU, KV cache; `rope_theta=10000`). Uses `comfy.ops`; RoPE reuses the shared Flux rotary embedding (`comfy.ldm.flux.math`) for the comfy-kitchen kernel — see follow-up below. |
 | `comfy/ldm/cube/vae.py` | `OneDAutoEncoder` **decode path** (codebook lookup → decoder → occupancy decoder → dense grid). |
 | `comfy/ldm/cube/marching_cubes.py` | **vendored, dependency-free** vectorized Lorensen marching cubes. |
 | `comfy/model_detection.py` | detect `shape_gpt` → `image_model="cube3d"`, dims from state dict. |
@@ -91,6 +91,28 @@ Loading upstream and native `DualStreamRoformer` in the same process on a 2×409
 - full graph produced a valid `pagoda.glb` (~109k–215k verts), deterministic on re-run.
 
 When fed identical conditioning under the same torch build, output is **bit-identical**.
+
+## Follow-up: reusing the shared Flux RoPE (comfy-kitchen)
+
+After the initial port, `gpt.py`'s bespoke complex-number RoPE (`torch.polar` /
+`view_as_complex`) was migrated to ComfyUI's shared Flux rotary embedding
+(`comfy.ldm.flux.math`) so it picks up comfy-kitchen's optimized `apply_rope` kernel —
+the pre-PR checklist item to reuse shared building blocks. The conventions are identical
+(adjacent-dim pairing, `theta=10000`, `(x0+ix1)·e^{iθ}`); the only difference is Flux
+computes the angles in fp64 before casting to fp32.
+
+Parity was re-validated by **isolated op test** on the 2×4090 box, not by diffing the
+mesh:
+
+| compare | fp32 | bf16 |
+|---|---|---|
+| comfy-kitchen kernel vs Flux torch-ref | **0.0 (bit-identical)** | ~3.9e-3 |
+| cube-original complex RoPE vs migrated | max 1.5e-4 / mean 1.1e-6 | ~1.6e-2 (≈1 ULP) |
+
+The end-to-end GLB still changed ~4% (3,931,984 → 3,778,836 bytes) because the bf16
+greedy-`argmax` decode amplifies the ~1-ULP difference — **expected, not a bug**. This is
+the canonical autoregressive parity trap; see
+[guides/05-sampler.md](../guides/05-sampler.md#equivalent-math--identical-output-autoregressive-models).
 
 ## Known out-of-the-box differences vs upstream (documented, not bugs)
 

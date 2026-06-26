@@ -91,4 +91,61 @@ model, drive the schedule with `BasicScheduler(steps=1)`.
 - **Determinism.** Greedy argmax is deterministic but can flip on near-ties across
   torch/CUDA builds; this shows up as a different-but-valid result. Document it.
 
+## Equivalent math ≠ identical output (autoregressive models)
+
+For an autoregressive sampler, **output equality is the wrong parity criterion.** Two
+implementations that are mathematically identical but differ only in floating-point
+*rounding order* can still produce a completely different final artifact: a single
+greedy-`argmax` near-tie flips one token, and because each token is fed back in, the
+rest of the sequence cascades into a different (but equally valid) result. A diffusion
+model averages such noise out over its denoising steps; an autoregressive decode
+*amplifies* it. So **verify equivalence at the math/logits level, not by diffing the
+final mesh/image/audio.**
+
+The right harness for an AR port:
+
+1. **Isolated op test** — feed identical tensors to the old and new implementation of
+   the op you changed and compare directly (no autoregression in the loop).
+2. **Logits/first-token test** — compare the GPT's logits for the first generated
+   token under identical conditioning. Agreement here proves the forward pass matches;
+   divergence *after* the first flip is expected amplification, not a bug.
+
+Do **not** conclude "the port is broken" from a different final artifact alone.
+
+### Worked example — swapping Cube3D's RoPE for the shared Flux kernel
+
+Cube3D's bespoke complex-number RoPE (`torch.polar` / `view_as_complex`) was migrated
+to ComfyUI's shared Flux rotary embedding so it benefits from comfy-kitchen's optimized
+`apply_rope` kernel (see [checklists/pre-pr-checklist.md](../checklists/pre-pr-checklist.md)
+and [guides/07-optimizations.md](07-optimizations.md)). The pairing convention
+(adjacent dims), frequencies (`theta=10000`, `2k/dim`), and rotation (`(x0+ix1)·e^{iθ}`)
+are identical; the only difference is Flux computes the angles in fp64 before casting to
+fp32.
+
+Isolated op test on a 2×4090 box (cube-original complex RoPE vs Flux torch reference vs
+the comfy-kitchen kernel actually used at inference):
+
+| compare | fp32 | bf16 |
+|---|---|---|
+| ck-kernel vs Flux torch-ref | **0.0 (bit-identical)** | ~3.9e-3 |
+| cube-original vs migrated | max 1.5e-4 / mean 1.1e-6 | ~1.6e-2 (≈1 bf16 ULP) |
+
+Yet the end-to-end GLB differed by ~4% (3,931,984 → 3,778,836 bytes, reproducible).
+Cause: `sample_cube` runs greedy `argmax` under a **bf16 autocast**, so a ~1-ULP RoPE
+difference eventually flips one argmax across the 1024-token decode and the mesh
+cascades. The migration is **correct** — the kernel is bit-identical to the reference
+in fp32 — and the divergence is the expected amplification described above.
+
+Lessons this reinforces:
+
+- The isolated op + bit-identical fp32 kernel check is what proved correctness; the GLB
+  diff alone would have been misleading.
+- Don't "fix" this by forcing fp32 autocast — the output isn't degraded, just
+  different, which matches the dtype guidance above (only pin a heavier dtype when
+  quality *meaningfully* changes).
+- Per the golden rule, a change like this must be **called out in the PR body**: state
+  that the mesh diverges from the pre-migration baseline due to bf16 autoregressive
+  amplification of a mathematically-equivalent op, and attach the isolated-op numbers
+  so review proceeds fully informed. See [case-studies/cube3d.md](../case-studies/cube3d.md).
+
 Next: [guides/06-nodes.md](06-nodes.md).
