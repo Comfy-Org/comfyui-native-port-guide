@@ -1,0 +1,12 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python (for any future helper scripts / parity harnesses)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
