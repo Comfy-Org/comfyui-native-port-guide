@@ -73,8 +73,11 @@ relevant guide.
 
 ## The golden rule
 
-- [ ] **Every deviation from convention is commented in-code with a reason**, and
-      called out in the commit message. [→conventions](../reference/conventions.md)
+- [ ] **Every deviation from convention is commented in-code with a reason**, named in
+      the commit message, **and explicitly called out in the PR body / review comments
+      where applicable** (e.g. a "Deviations from convention" section, known parity gaps,
+      performance trade-offs, follow-ups) so human review and continued work are fully
+      informed. [→conventions](../reference/conventions.md)
 
 ## A good parity harness (sketch)
 

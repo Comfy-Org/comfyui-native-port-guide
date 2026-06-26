@@ -6,16 +6,29 @@ rationale.
 
 ## The golden rule
 
-> **Document every deviation from convention in-code, with a reason.**
+> **Document every deviation from convention in-code AND in the PR, with a reason.**
 
 ComfyUI has strong conventions (use `comfy.ops`, route through managed paths, reuse
 nodes). When your model genuinely needs to break one, that's allowed — but the
-deviation must be **commented at the site** explaining *why*, and called out in the
-commit message. A reviewer should never have to guess whether an oddity is intentional.
+deviation must be documented in three places so nobody has to guess whether an oddity
+is intentional:
+
+1. **In-code** — commented at the site explaining *why*.
+2. **In the commit message** — naming the deviation and its reason.
+3. **In the PR body / review comments** — explicitly called out (a "Deviations from
+   convention" section, or an inline comment on the relevant diff line) **wherever
+   applicable**, so human review and any continued work happen fully informed.
+
+In-code comments are easy to miss in a large diff; calling deviations out in the PR
+itself puts them in front of the reviewer and the next contributor. Things that
+especially warrant a PR call-out: known parity gaps vs upstream, intentional
+divergences from a sibling port, performance trade-offs (e.g. a bespoke RoPE that
+skips the comfy-kitchen kernel), and anything left as a follow-up.
 
 The Cube3D port's final commit was a pure "document the deviations" pass: it commented
 why `working_dtypes` is fp32-only, why `clip_target()` returns `None`, why
-`rope_theta=10000`, and removed a dead flag. That is the standard to aim for.
+`rope_theta=10000`, and removed a dead flag — and the deviations were summarized in the
+review thread. That is the standard to aim for.
 
 ## Do
 

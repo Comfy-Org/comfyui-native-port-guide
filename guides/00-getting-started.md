@@ -78,7 +78,8 @@ Catching a divergence at "layer 3 attention output" is an afternoon; catching it
 - Keep the first commit a working end-to-end skeleton, then make each follow-up
   commit a single, reviewable fix with a message that explains *why* (the Cube3D
   history is a good model: each commit names the trap it closes).
-- Every deviation from convention gets a code comment **and** a line in the commit
-  message.
+- Every deviation from convention gets a code comment, a line in the commit
+  message, **and** an explicit call-out in the PR body/comments where applicable — so
+  human review and continued work are fully informed.
 
 Next: [guides/01-model.md](01-model.md).

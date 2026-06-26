@@ -23,7 +23,8 @@ A native port:
   manually moving weights to a device.
 - Reuses existing **conditioning, guiders, samplers, and output nodes** wherever
   possible; only adds new nodes/samplers when the architecture genuinely requires it.
-- **Documents every deviation** from these conventions in-code, with a reason.
+- **Documents every deviation** from these conventions in-code, in the commit message,
+  and in the PR body/comments (where applicable), each with a reason.
 
 If you find yourself calling `load_models_gpu(...)` + `.to(device)` by hand inside a
 node, writing your own loader, or re-implementing attention without `comfy.ops`, you
