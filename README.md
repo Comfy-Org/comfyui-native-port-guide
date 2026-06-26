@@ -1,7 +1,7 @@
 # ComfyUI Native Port Guide
 
 Guidelines, conventions, and worked examples for adding **native** support for new
-models to [ComfyUI](https://github.com/comfyanonymous/ComfyUI) — that is, support
+models to [ComfyUI](https://github.com/Comfy-Org/ComfyUI) — that is, support
 that lives in core (`comfy/`, `comfy_extras/`) and reuses ComfyUI's model
 management, ops, conditioning, sampling, and node systems, rather than a bolt-on
 custom-node pack that re-implements its own loading and offload.
